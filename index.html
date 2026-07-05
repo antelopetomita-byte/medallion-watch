@@ -124,6 +124,13 @@ input:focus{outline:none;border-color:var(--amber)}
     <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="nkInfo">—</div>
   </div>
 
+  <div class="card">
+    <div class="lbl">BTC//MOMENTUM（12ヶ月モメンタム・ロング/フラット）</div>
+    <div class="nav-big" id="btcNav" style="font-size:30px">—</div>
+    <div class="nav-sub" id="btcPl">—</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="btcInfo">—</div>
+  </div>
+
   <button onclick="loadAll()">更新する</button>
   <div class="err" id="appErr"></div>
 </div>
@@ -183,6 +190,28 @@ function drawEq(rows){
     i?ctx.lineTo(x,y):ctx.moveTo(x,y);
   });
   ctx.stroke();
+}
+function loadBtc(){
+  Promise.all([
+    gh('live/btc_account.json').catch(function(){return null}),
+    gh('live/btc_log.csv').catch(function(){return null})
+  ]).then(function(res){
+    var a=res[0]?JSON.parse(res[0]):null;
+    var rows=res[1]?parseCSV(res[1]):[];
+    if(!a){document.getElementById('btcNav').textContent='¥300,000';
+      document.getElementById('btcPl').textContent='初回チェック待ち';
+      document.getElementById('btcPl').className='nav-sub';
+      document.getElementById('btcInfo').textContent='毎朝 09:15 JST にモメンタム判定';return}
+    var last=rows.length?rows[rows.length-1]:null;
+    var nav=last?parseFloat(last.nav_jpy):a.balance_jpy;
+    document.getElementById('btcNav').textContent=yen(nav);
+    var pl=nav-300000, el=document.getElementById('btcPl');
+    el.textContent=(pl>=0?'+':'')+yen(pl).replace('¥-','−¥')+' （'+(pl/3000).toFixed(2)+'%）';
+    el.className='nav-sub '+(pl>=0?'up':'dn');
+    var pos=a.btc>0?'<span class="up">LONG '+a.btc.toFixed(5)+' BTC</span>':'<span class="skel">FLAT（現金待機）</span>';
+    var info=last?('BTC $'+Number(last.btc_usd).toLocaleString()+'　12Mモメンタム <span class="'+(parseFloat(last.mom_pct)>=0?'up':'dn')+'">'+last.mom_pct+'%</span><br>'+pos+'　'+last.action):pos;
+    document.getElementById('btcInfo').innerHTML=info;
+  }).catch(function(){});
 }
 function loadNikkei(){
   Promise.all([
@@ -266,6 +295,7 @@ function loadAll(){
     if(!rows.length)tb.innerHTML='<tr><td colspan="5" class="skel">まだ判断ログがありません</td></tr>';
 
     loadNikkei();
+    loadBtc();
     document.getElementById('meta').innerHTML=meta?
       '学習日時: '+meta.trained_at.slice(0,16).replace('T',' ')+' UTC<br>'
       +'学習バー数: '+meta.train_bars.toLocaleString()+'　予測履歴: '+meta.predhist_bars.toLocaleString()
