@@ -86,8 +86,8 @@ input:focus{outline:none;border-color:var(--amber)}
     <div class="lbl">シグナルメーター（直近バー）</div>
     <div class="meter" id="meter">
       <div class="meter-track"></div>
-      <div class="meter-thr" id="thrL"></div>
-      <div class="meter-thr" id="thrR"></div>
+      <div class="meter-thr" id="thrL" style="display:none"></div>
+      <div class="meter-thr" id="thrR" style="display:none"></div>
       <div class="meter-needle" id="needle" style="left:50%"></div>
       <div class="meter-scale"><span>売り −3σ</span><span>0</span><span>+3σ 買い</span></div>
     </div>
@@ -236,8 +236,8 @@ function loadAll(){
       var z=parseFloat(r.z),thr=parseFloat(r.thr);
       var clip=Math.max(-3,Math.min(3,z));
       document.getElementById('needle').style.left=((clip+3)/6*100)+'%';
-      document.getElementById('thrL').style.left=((3-thr)/6*100)+'%';
-      document.getElementById('thrR').style.left=((3+thr)/6*100)+'%';
+      var tL=document.getElementById('thrL');tL.style.display='block';tL.style.left=((3-thr)/6*100)+'%';
+      var tR=document.getElementById('thrR');tR.style.display='block';tR.style.left=((3+thr)/6*100)+'%';
       document.getElementById('zline').innerHTML=
         'z = <span class="amber">'+z.toFixed(2)+'</span> / 発火 ±'+thr.toFixed(2)
         +'　<small>'+r.time+' UTC</small>';
