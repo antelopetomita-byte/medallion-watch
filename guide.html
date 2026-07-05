@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MEDALLION//WATCH 使い方図解</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B1017;--panel:#121A24;--panel2:#0E1520;--line:#1E2A38;--tx:#D8E2EC;
+--mut:#5A6B7E;--amber:#FFB454;--up:#3DDCA3;--dn:#FF5C7A;
+--mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans JP',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font-family:var(--sans);padding:20px 14px 40px}
+.wrap{max-width:560px;margin:0 auto}
+h1{font-family:var(--mono);font-size:15px;letter-spacing:.14em;color:var(--amber);margin-bottom:4px}
+.sub{font-size:12px;color:var(--mut);margin-bottom:24px}
+/* mock cards (smaller, non-interactive) */
+.mock{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;position:relative}
+.lbl{font-size:9px;letter-spacing:.18em;color:var(--mut);font-family:var(--mono);margin-bottom:5px}
+.badge{position:absolute;top:-13px;left:-8px;width:26px;height:26px;border-radius:50%;
+background:var(--amber);color:#0B1017;font-family:var(--mono);font-weight:600;font-size:14px;
+display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(255,180,84,.45)}
+.expl{border-left:2px solid var(--amber);margin:10px 0 28px 12px;padding:2px 0 2px 14px;
+font-size:13px;line-height:1.9;color:var(--tx)}
+.expl b{color:var(--amber)}
+.expl .ok{color:var(--up)} .expl .ng{color:var(--dn)}
+.nav-big{font-family:var(--mono);font-size:30px;font-weight:600;font-variant-numeric:tabular-nums}
+.nav-sub{font-family:var(--mono);font-size:12px;margin-top:3px}
+.up{color:var(--up)}.dn{color:var(--dn)}.amber{color:var(--amber)}.skel{color:var(--mut)}
+.meter{position:relative;height:50px;margin-top:8px}
+.mt{position:absolute;top:22px;left:0;right:0;height:5px;border-radius:3px;
+background:linear-gradient(90deg,var(--dn),var(--line) 30%,var(--line) 70%,var(--up))}
+.thr{position:absolute;top:15px;width:2px;height:20px;background:var(--amber)}
+.needle{position:absolute;top:11px;width:3px;height:28px;background:var(--tx);border-radius:2px;
+box-shadow:0 0 8px rgba(255,180,84,.5)}
+.scale{position:absolute;top:36px;width:100%;display:flex;justify-content:space-between;
+font-family:var(--mono);font-size:8px;color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:10px}
+th{color:var(--mut);font-weight:400;text-align:left;padding:3px 5px;border-bottom:1px solid var(--line)}
+td{padding:4px 5px;border-bottom:1px solid var(--panel2);white-space:nowrap}
+tr.hit td{color:var(--amber)}
+svg{display:block;width:100%}
+.flow{background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+padding:14px;font-family:var(--mono);font-size:11px;line-height:2.1;color:var(--mut);margin-bottom:28px}
+.flow b{color:var(--tx)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>MEDALLION//WATCH の見方</h1>
+<div class="sub">3つのボットを1画面で監視 — 開いて眺めるだけ、操作は不要</div>
+
+<div class="mock"><div class="badge">1</div>
+  <div class="lbl">仮想口座 NAV（開始 ¥300,000）</div>
+  <div class="nav-big">¥303,420</div>
+  <div class="nav-sub up">+¥3,420 （+1.14%）　実現損益 ¥2,180</div>
+</div>
+<div class="expl"><b>EURUSDボットの残高。</b>ここが一番大事な数字。
+<span class="ok">緑＝勝ってる</span>／<span class="ng">赤＝負けてる</span>。
+30万円からの増減がそのまま成績。1日1回ここを見るだけでも十分。</div>
+
+<div class="mock"><div class="badge">2</div>
+  <div class="lbl">シグナルメーター（直近バー）</div>
+  <div class="meter">
+    <div class="mt"></div>
+    <div class="thr" style="left:11%"></div>
+    <div class="thr" style="left:89%"></div>
+    <div class="needle" style="left:76%"></div>
+    <div class="scale"><span>売り −3σ</span><span>0</span><span>+3σ 買い</span></div>
+  </div>
+  <div style="font-family:var(--mono);font-size:13px;margin-top:4px">z = <span class="amber">+1.58</span> / 発火 ±2.34</div>
+</div>
+<div class="expl"><b>ボットの「今の気持ち」。</b>白い針＝AIの予測の強さ。
+琥珀の縦線＝<b>発火線</b>。針が線を越えた瞬間だけ売買する。
+針が中央付近をウロウロ→待機中（それが平常運転）。
+針が線に迫ってきたら「そろそろ動くかも」のサイン。</div>
+
+<div class="mock"><div class="badge">3</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div><div class="lbl">ポジション</div>
+      <div style="font-family:var(--mono);font-size:14px"><span style="border:1px solid var(--up);color:var(--up);border-radius:9px;padding:1px 7px;font-size:10px">LONG</span> EURUSD</div></div>
+    <div><div class="lbl">最終判断</div>
+      <div style="font-family:var(--mono);font-size:14px">enter LONG 6913u</div></div>
+  </div>
+</div>
+<div class="expl"><b>今の持ち高と直近アクション。</b>
+「フラット」＝何も持ってない（安全圏）。
+LONG＝買い持ち／SHORT＝売り持ち。最大2時間で自動決済される。</div>
+
+<div class="mock"><div class="badge">4</div>
+  <div class="lbl">エクイティカーブ（NAV推移）</div>
+  <svg viewBox="0 0 300 80">
+    <line x1="0" y1="55" x2="300" y2="55" stroke="#1E2A38" stroke-dasharray="4 4"/>
+    <polyline points="0,55 30,57 60,52 90,54 120,46 150,48 180,38 210,40 240,32 270,28 300,24"
+      fill="none" stroke="#3DDCA3" stroke-width="2.5" stroke-linejoin="round"/>
+  </svg>
+</div>
+<div class="expl"><b>残高の歴史。</b>点線＝スタートの30万円ライン。
+線が点線より上で右肩上がりなら順調。
+ギザギザは正常（この戦略は勝率5割強を積み上げる型）。</div>
+
+<div class="mock"><div class="badge">5</div>
+  <div class="lbl">判断ログ（直近15件）</div>
+  <table>
+    <tr><th>時刻(UTC)</th><th>z</th><th>閾値</th><th>アクション</th><th>NAV</th></tr>
+    <tr><td>07-06 09:00</td><td>0.42</td><td>2.34</td><td>hold</td><td>¥303,420</td></tr>
+    <tr class="hit"><td>07-06 08:00</td><td>2.51</td><td>2.33</td><td>enter LONG</td><td>¥303,180</td></tr>
+    <tr><td>07-06 07:00</td><td>1.10</td><td>2.33</td><td>hold</td><td>¥303,180</td></tr>
+  </table>
+</div>
+<div class="expl"><b>毎時の記録簿。</b>ほぼ全部「hold」で埋まるのが<b>正常</b>
+（上位2%の好機しか撃たない設計だから）。
+<span style="color:var(--amber)">琥珀色に光る行</span>＝実際に売買した瞬間。1週間に数回あれば標準ペース。</div>
+
+<div class="mock"><div class="badge">6</div>
+  <div class="lbl">NIKKEI//OVERNIGHT（引け買い → 翌寄り売り・仮想30万円）</div>
+  <div class="nav-big" style="font-size:24px">¥300,860</div>
+  <div class="nav-sub up">+¥860 （+0.29%）・3夜</div>
+  <div style="font-family:var(--mono);font-size:10px;color:var(--mut);margin-top:8px;line-height:1.8">
+  <span class="amber">持ち越し中 7.52u @39,880</span><br>
+  07-08 00:05 SELL(open) @40,010 (+920円)</div>
+</div>
+<div class="expl"><b>2号機：日経の夜だけ乗る戦略。</b>
+毎日15:10に自動で買い、翌朝9:05に自動で売る。「◯夜」＝経過した夜の数。
+「持ち越し中」＝今夜のポジションを抱えてる状態（夕方〜朝に見るとこうなってる）。</div>
+
+<div class="mock"><div class="badge">7</div>
+  <div class="lbl">BTC//MOMENTUM（12ヶ月モメンタム・ロング/フラット）</div>
+  <div class="nav-big" style="font-size:24px">¥300,000</div>
+  <div class="nav-sub">±¥0 （0.00%）</div>
+  <div style="font-family:var(--mono);font-size:10px;color:var(--mut);margin-top:8px;line-height:1.8">
+  BTC $62,656　12Mモメンタム <span class="dn">-42.9%</span><br>
+  <span class="skel">FLAT（現金待機）</span>　stay FLAT</div>
+</div>
+<div class="expl"><b>3号機：ビットコインの上昇相場だけ乗る戦略。</b>
+モメンタムが<span class="ng">赤（マイナス）</span>の間は現金で待機＝守りの時間。
+<span class="ok">緑</span>に転じた朝、自動で買いに入る。動きは年数回だけ。何ヶ月も動かなくて正解。</div>
+
+<div class="flow">
+<b>■ 1日のリズム（JST）</b><br>
+06:05〜 EURUSD 毎時判断スタート<br>
+09:05　日経：寄りで売り（夜間損益が確定）<br>
+09:15　BTC：モメンタム判定<br>
+15:10　日経：引けで買い（今夜の仕込み）<br>
+<br>
+<b>■ JOJOがやること</b><br>
+・気が向いた時に開く（1日1回で十分）<br>
+・変な数字を見つけたら Claude に「調子どう？」<br>
+・あとは何もしない — 退屈こそ正常運転
+</div>
+
+<div style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--mut)">
+<a href="./" style="color:var(--amber)">← ダッシュボードへ戻る</a></div>
+</div>
+</body>
+</html>
