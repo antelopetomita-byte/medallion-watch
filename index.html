@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0B1017">
+<meta name="theme-color" content="#07090E">
 <title>MEDALLION//WATCH</title>
 <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
 <link rel="icon" type="image/png" sizes="64x64" href="favicon-64.png">
@@ -11,61 +11,127 @@
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0B1017; --panel:#121A24; --panel2:#0E1520; --line:#1E2A38;
-  --tx:#D8E2EC; --mut:#5A6B7E; --amber:#FFB454;
-  --up:#3DDCA3; --dn:#FF5C7A;
-  --mono:'IBM Plex Mono',monospace; --sans:'IBM Plex Sans JP',sans-serif;
+  --bg:#07090E;--panel:rgba(18,26,36,.72);--panel2:#0E1520;--line:#1E2A38;
+  --tx:#D8E2EC;--mut:#5A6B7E;--amber:#FFB454;--gold:#FFD98A;
+  --up:#3DDCA3;--dn:#FF5C7A;
+  --mono:'IBM Plex Mono',monospace;--sans:'IBM Plex Sans JP',sans-serif;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{background:var(--bg);color:var(--tx);font-family:var(--sans);min-height:100vh;
-  padding:max(14px,env(safe-area-inset-top)) 14px calc(30px + env(safe-area-inset-bottom))}
+html{background:var(--bg)}
+body{
+  color:var(--tx);font-family:var(--sans);min-height:100vh;
+  padding:max(14px,env(safe-area-inset-top)) 14px calc(34px + env(safe-area-inset-bottom));
+  background:
+    radial-gradient(1200px 500px at 50% -10%, rgba(255,180,84,.07), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 39px, rgba(30,42,56,.35) 39px 40px),
+    repeating-linear-gradient(90deg, transparent 0 39px, rgba(30,42,56,.35) 39px 40px),
+    var(--bg);
+}
 .wrap{max-width:560px;margin:0 auto}
-header{display:flex;justify-content:space-between;align-items:baseline;padding:6px 2px 16px}
-h1{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:.14em;color:var(--amber)}
+
+/* ---- header ---- */
+header{display:flex;align-items:center;gap:10px;padding:6px 2px 18px}
+.logo{width:30px;height:30px;flex:none;filter:drop-shadow(0 0 8px rgba(255,180,84,.5))}
+h1{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:.16em;color:var(--gold)}
 h1 span{color:var(--mut)}
+.live{margin-left:auto;display:flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:10px;color:var(--mut);letter-spacing:.1em}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--up);
+  box-shadow:0 0 8px var(--up);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 #clock{font-family:var(--mono);font-size:11px;color:var(--mut)}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:12px}
-.lbl{font-size:10px;letter-spacing:.18em;color:var(--mut);font-family:var(--mono);margin-bottom:6px}
-.nav-big{font-family:var(--mono);font-size:40px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums}
-.nav-sub{font-family:var(--mono);font-size:13px;margin-top:4px}
-.up{color:var(--up)} .dn{color:var(--dn)} .amber{color:var(--amber)}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* ---- HUD cards with corner brackets ---- */
+.card{
+  position:relative;background:var(--panel);backdrop-filter:blur(6px);
+  border:1px solid var(--line);border-radius:4px;padding:18px 16px;margin-bottom:14px;
+  background-image:linear-gradient(180deg, rgba(255,180,84,.05), transparent 40%);
+}
+.card::before,.card::after{
+  content:'';position:absolute;width:14px;height:14px;pointer-events:none;
+  border:2px solid var(--amber);opacity:.75;
+}
+.card::before{top:-2px;left:-2px;border-right:none;border-bottom:none;border-radius:3px 0 0 0}
+.card::after{bottom:-2px;right:-2px;border-left:none;border-top:none;border-radius:0 0 3px 0}
+.lbl{display:flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.2em;
+  color:var(--mut);font-family:var(--mono);margin-bottom:8px}
+.lbl::before{content:'';width:5px;height:12px;background:var(--amber);flex:none;
+  box-shadow:0 0 6px rgba(255,180,84,.6)}
+
+/* ---- NAV hero ---- */
+.nav-big{
+  font-family:var(--mono);font-size:42px;font-weight:600;line-height:1.1;
+  font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,#FFF4DC 0%,var(--gold) 45%,#C98F3D 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 2px 10px rgba(255,180,84,.22));
+}
+.nav-sub{font-family:var(--mono);font-size:13px;margin-top:6px}
+.up{color:var(--up)}.dn{color:var(--dn)}.amber{color:var(--amber)}.skel{color:var(--mut)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .kv{font-family:var(--mono);font-size:16px;font-weight:500;font-variant-numeric:tabular-nums}
-.kv small{font-size:10px;color:var(--mut);font-weight:400}
-/* signal meter */
-.meter{position:relative;height:54px;margin-top:10px}
-.meter-track{position:absolute;top:24px;left:0;right:0;height:6px;border-radius:3px;
-  background:linear-gradient(90deg,var(--dn),var(--line) 30%,var(--line) 70%,var(--up))}
-.meter-thr{position:absolute;top:16px;width:2px;height:22px;background:var(--amber);opacity:.85}
+.kv small{font-size:10px;color:var(--mut)}
+
+/* ---- signal meter ---- */
+.meter{position:relative;height:58px;margin-top:12px}
+.meter-track{position:absolute;top:26px;left:0;right:0;height:6px;border-radius:3px;
+  background:linear-gradient(90deg,var(--dn),var(--line) 30%,var(--line) 70%,var(--up));
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.6)}
+.meter-ticks{position:absolute;top:22px;left:0;right:0;height:14px;display:flex;justify-content:space-between}
+.meter-ticks i{width:1px;height:100%;background:var(--line)}
+.meter-thr{position:absolute;top:16px;width:2px;height:26px;background:var(--amber);
+  box-shadow:0 0 8px rgba(255,180,84,.8)}
 .meter-thr::after{content:'発火線';position:absolute;top:-14px;left:50%;transform:translateX(-50%);
   font-size:9px;color:var(--amber);font-family:var(--mono);white-space:nowrap}
-.meter-needle{position:absolute;top:12px;width:3px;height:30px;background:var(--tx);border-radius:2px;
-  box-shadow:0 0 10px rgba(255,180,84,.5);transition:left .8s cubic-bezier(.2,.8,.2,1)}
-.meter-scale{position:absolute;top:38px;width:100%;display:flex;justify-content:space-between;
+.meter-needle{position:absolute;top:12px;width:3px;height:34px;background:#fff;border-radius:2px;
+  box-shadow:0 0 12px rgba(255,244,220,.9), 0 0 24px rgba(255,180,84,.5);
+  transition:left .8s cubic-bezier(.2,.8,.2,1)}
+.meter-scale{position:absolute;top:44px;width:100%;display:flex;justify-content:space-between;
   font-family:var(--mono);font-size:9px;color:var(--mut)}
-canvas{width:100%;height:120px;display:block}
+canvas{width:100%;height:130px;display:block}
+
+/* ---- table ---- */
 table{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11px}
-th{color:var(--mut);font-weight:400;text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);letter-spacing:.06em}
-td{padding:6px;border-bottom:1px solid var(--panel2);font-variant-numeric:tabular-nums;white-space:nowrap}
-tr.hit td{color:var(--amber)}
-.pill{display:inline-block;padding:1px 7px;border-radius:9px;font-size:10px;border:1px solid var(--line)}
-.pill.L{color:var(--up);border-color:var(--up)} .pill.S{color:var(--dn);border-color:var(--dn)}
-button{font-family:var(--mono);font-size:12px;letter-spacing:.1em;background:none;color:var(--amber);
-  border:1px solid var(--amber);border-radius:8px;padding:10px 16px;width:100%;cursor:pointer}
-button:active{background:rgba(255,180,84,.12)}
-input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;
-  color:var(--tx);font-family:var(--mono);font-size:13px;padding:12px;margin:10px 0}
-input:focus{outline:none;border-color:var(--amber)}
-#gate p{font-size:12px;color:var(--mut);line-height:1.7}
+th{color:var(--mut);font-weight:400;text-align:left;padding:4px 6px;
+  border-bottom:1px solid var(--line);letter-spacing:.06em}
+td{padding:7px 6px;border-bottom:1px solid rgba(30,42,56,.5);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.hit td{color:var(--amber);text-shadow:0 0 8px rgba(255,180,84,.4)}
+.pill{display:inline-block;padding:1px 8px;border-radius:2px;font-size:10px;border:1px solid var(--line)}
+.pill.L{color:var(--up);border-color:var(--up);box-shadow:0 0 8px rgba(61,220,163,.25)}
+.pill.S{color:var(--dn);border-color:var(--dn);box-shadow:0 0 8px rgba(255,92,122,.25)}
+
+/* ---- controls ---- */
+button{font-family:var(--mono);font-size:12px;letter-spacing:.14em;
+  background:linear-gradient(180deg, rgba(255,180,84,.14), rgba(255,180,84,.04));
+  color:var(--gold);border:1px solid var(--amber);border-radius:3px;
+  padding:13px 16px;width:100%;cursor:pointer;
+  box-shadow:0 0 14px rgba(255,180,84,.12), inset 0 1px 0 rgba(255,244,220,.15)}
+button:active{background:rgba(255,180,84,.22)}
+input{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:3px;
+  color:var(--tx);font-family:var(--mono);font-size:13px;padding:13px;margin:10px 0}
+input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,180,84,.25)}
+#gate p{font-size:12px;color:var(--mut);line-height:1.8}
 .err{color:var(--dn);font-size:12px;font-family:var(--mono);margin-top:8px;display:none}
-.foot{text-align:center;font-family:var(--mono);font-size:10px;color:var(--mut);padding-top:8px}
-.skel{color:var(--mut)}
-@media (prefers-reduced-motion:reduce){.meter-needle{transition:none}}
+.foot{text-align:center;font-family:var(--mono);font-size:10px;color:var(--mut);padding-top:12px}
+.foot a{color:var(--amber);text-decoration:none}
+@media (prefers-reduced-motion:reduce){.meter-needle{transition:none}.dot{animation:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header><h1>MEDALLION<span>//</span>WATCH</h1><div id="clock"></div></header>
+<header>
+  <svg class="logo" viewBox="0 0 40 40">
+    <circle cx="20" cy="20" r="17" fill="none" stroke="#FFB454" stroke-width="3.2"/>
+    <circle cx="20" cy="20" r="12.5" fill="none" stroke="#8A5A1A" stroke-width="1"/>
+    <line x1="12" y1="20" x2="28" y2="20" stroke="#1E2A38" stroke-width="3" stroke-linecap="round"/>
+    <line x1="15" y1="16.5" x2="15" y2="23.5" stroke="#FFB454" stroke-width="2" stroke-linecap="round"/>
+    <line x1="25" y1="16.5" x2="25" y2="23.5" stroke="#FFB454" stroke-width="2" stroke-linecap="round"/>
+    <line x1="27.5" y1="14" x2="27.5" y2="26" stroke="#EAF6EF" stroke-width="2.4" stroke-linecap="round"/>
+  </svg>
+  <h1>MEDALLION<span>//</span>WATCH</h1>
+  <div class="live"><span class="dot"></span>LIVE <span id="clock"></span></div>
+</header>
 
 <div id="gate" class="card" style="display:none">
   <div class="lbl">ACCESS</div>
@@ -77,7 +143,7 @@ input:focus{outline:none;border-color:var(--amber)}
 
 <div id="app" style="display:none">
   <div class="card">
-    <div class="lbl">仮想口座 NAV（開始 ¥300,000）</div>
+    <div class="lbl">EURUSD ML BOT — 仮想口座 NAV（開始 ¥300,000）</div>
     <div class="nav-big" id="nav">—</div>
     <div class="nav-sub" id="pl">—</div>
   </div>
@@ -85,13 +151,14 @@ input:focus{outline:none;border-color:var(--amber)}
   <div class="card">
     <div class="lbl">シグナルメーター（直近バー）</div>
     <div class="meter" id="meter">
+      <div class="meter-ticks"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <div class="meter-track"></div>
       <div class="meter-thr" id="thrL" style="display:none"></div>
       <div class="meter-thr" id="thrR" style="display:none"></div>
       <div class="meter-needle" id="needle" style="left:50%"></div>
       <div class="meter-scale"><span>売り −3σ</span><span>0</span><span>+3σ 買い</span></div>
     </div>
-    <div class="kv" style="margin-top:6px" id="zline">—</div>
+    <div class="kv" style="margin-top:8px" id="zline">—</div>
   </div>
 
   <div class="grid2">
@@ -101,7 +168,7 @@ input:focus{outline:none;border-color:var(--amber)}
 
   <div class="card">
     <div class="lbl">エクイティカーブ（NAV推移）</div>
-    <canvas id="eq" width="600" height="240"></canvas>
+    <canvas id="eq" width="600" height="260"></canvas>
   </div>
 
   <div class="card">
@@ -110,11 +177,6 @@ input:focus{outline:none;border-color:var(--amber)}
       <thead><tr><th>時刻(UTC)</th><th>z</th><th>閾値</th><th>アクション</th><th>NAV</th></tr></thead>
       <tbody></tbody>
     </table></div>
-  </div>
-
-  <div class="card" style="padding:12px 16px">
-    <div class="lbl">モデル</div>
-    <div style="font-family:var(--mono);font-size:11px;color:var(--mut);line-height:1.8" id="meta">—</div>
   </div>
 
   <div class="card">
@@ -131,17 +193,35 @@ input:focus{outline:none;border-color:var(--amber)}
     <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="btcInfo">—</div>
   </div>
 
+  <div class="card" style="padding:14px 16px">
+    <div class="lbl">モデル</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--mut);line-height:1.8" id="meta">—</div>
+  </div>
+
   <button onclick="loadAll()">更新する</button>
   <div class="err" id="appErr"></div>
 </div>
 
-<div class="foot"><a href="guide.html" style="color:var(--amber);text-decoration:none">使い方図解 →</a>　EURUSD H1 · ensemble ML · paper 3x · PCW 2026</div>
+<div class="foot"><a href="guide.html">使い方図解 →</a>　EURUSD H1 · ensemble ML · paper 3x · PCW 2026</div>
 </div>
 
 <script>
 var REPO='antelopetomita-byte/medallion-fx';
 var KEY='mdw_token';
 var yen=function(v){return '¥'+Math.round(v).toLocaleString('ja-JP')};
+var _navPrev=null;
+function animateYen(el, target){
+  var from=_navPrev===null?target:_navPrev; _navPrev=target;
+  var t0=null;
+  function step(ts){
+    if(!t0)t0=ts;
+    var p=Math.min(1,(ts-t0)/700);
+    var e=1-Math.pow(1-p,3);
+    el.textContent=yen(from+(target-from)*e);
+    if(p<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
 
 function tok(){return localStorage.getItem(KEY)||''}
 function saveTok(){
@@ -175,21 +255,35 @@ function drawEq(rows){
   var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);
   if(mx-mn<1){mn-=500;mx+=500}
   var pad=14;
-  // baseline 300k
-  var by=H-pad-(300000-mn)/(mx-mn)*(H-2*pad);
+  function Y(v){return H-pad-(v-mn)/(mx-mn)*(H-2*pad)}
+  var by=Y(300000);
   if(by>pad&&by<H-pad){
     ctx.strokeStyle='#1E2A38';ctx.setLineDash([4,4]);ctx.beginPath();
     ctx.moveTo(0,by);ctx.lineTo(W,by);ctx.stroke();ctx.setLineDash([]);
   }
   var last=vals[vals.length-1];
-  ctx.strokeStyle=last>=300000?'#3DDCA3':'#FF5C7A';
-  ctx.lineWidth=2.5;ctx.lineJoin='round';ctx.beginPath();
+  var col=last>=300000?'#3DDCA3':'#FF5C7A';
+  // gradient fill under curve
+  var grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,last>=300000?'rgba(61,220,163,.28)':'rgba(255,92,122,.28)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.beginPath();
   vals.forEach(function(v,i){
     var x=i/(vals.length-1)*W;
-    var y=H-pad-(v-mn)/(mx-mn)*(H-2*pad);
-    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    i?ctx.lineTo(x,Y(v)):ctx.moveTo(x,Y(v));
   });
-  ctx.stroke();
+  ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();
+  ctx.fillStyle=grad;ctx.fill();
+  // glow pass + main line
+  [[6,.25],[2.5,1]].forEach(function(p){
+    ctx.beginPath();
+    vals.forEach(function(v,i){
+      var x=i/(vals.length-1)*W;
+      i?ctx.lineTo(x,Y(v)):ctx.moveTo(x,Y(v));
+    });
+    ctx.strokeStyle=col;ctx.globalAlpha=p[1];ctx.lineWidth=p[0];
+    ctx.lineJoin='round';ctx.stroke();ctx.globalAlpha=1;
+  });
 }
 function loadBtc(){
   Promise.all([
@@ -253,12 +347,14 @@ function loadAll(){
     var meta=res[3]?JSON.parse(res[3]):null;
 
     var nav=rows.length?parseFloat(rows[rows.length-1].nav_jpy):(acct?acct.balance_jpy:300000);
-    document.getElementById('nav').textContent=yen(nav);
+    var navEl=document.getElementById('nav');
+    animateYen(navEl, nav);
     var pl=nav-300000,plp=pl/300000*100;
     var plEl=document.getElementById('pl');
     plEl.textContent=(pl>=0?'+':'')+yen(pl).replace('¥-','−¥')+' （'+(pl>=0?'+':'')+plp.toFixed(2)+'%）'
       +(acct?'　実現損益 '+yen(acct.realized_jpy):'');
     plEl.className='nav-sub '+(pl>=0?'up':'dn');
+    navEl.className='nav-big '+(pl>0?'glow':(pl<0?'glow-dn':''));
 
     if(rows.length){
       var r=rows[rows.length-1];
