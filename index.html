@@ -117,6 +117,13 @@ input:focus{outline:none;border-color:var(--amber)}
     <div style="font-family:var(--mono);font-size:11px;color:var(--mut);line-height:1.8" id="meta">—</div>
   </div>
 
+  <div class="card">
+    <div class="lbl">NIKKEI//OVERNIGHT（引け買い → 翌寄り売り・仮想30万円）</div>
+    <div class="nav-big" id="nkNav" style="font-size:30px">—</div>
+    <div class="nav-sub" id="nkPl">—</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="nkInfo">—</div>
+  </div>
+
   <button onclick="loadAll()">更新する</button>
   <div class="err" id="appErr"></div>
 </div>
@@ -177,6 +184,32 @@ function drawEq(rows){
   });
   ctx.stroke();
 }
+function loadNikkei(){
+  Promise.all([
+    gh('live/nikkei_account.json').catch(function(){return null}),
+    gh('live/nikkei_log.csv').catch(function(){return null})
+  ]).then(function(res){
+    var a=res[0]?JSON.parse(res[0]):null;
+    var rows=res[1]?parseCSV(res[1]):[];
+    if(!a){
+      document.getElementById('nkNav').textContent='¥300,000';
+      document.getElementById('nkPl').textContent='初回取引待ち';
+      document.getElementById('nkPl').className='nav-sub';
+      document.getElementById('nkInfo').textContent='平日 15:10 JST に仮想買い / 09:05 JST に仮想売り';
+      return;
+    }
+    document.getElementById('nkNav').textContent=yen(a.balance_jpy);
+    var pl=a.balance_jpy-300000;
+    var el=document.getElementById('nkPl');
+    el.textContent=(pl>=0?'+':'')+yen(pl).replace('¥-','−¥')+' （'+(pl/3000).toFixed(2)+'%）・'+a.nights+'夜';
+    el.className='nav-sub '+(pl>=0?'up':'dn');
+    var pos=a.units>0?'<span class="amber">持ち越し中 '+a.units.toFixed(2)+'u @'+Math.round(a.entry_price).toLocaleString()+'</span>':'フラット（次の引けで買い）';
+    var last=rows.slice(-3).reverse().map(function(r){
+      return r.time.slice(5,16)+' '+r.leg+' @'+r.price+(r.pnl_jpy?' ('+(parseFloat(r.pnl_jpy)>=0?'+':'')+Math.round(r.pnl_jpy)+'円)':'');
+    }).join('<br>');
+    document.getElementById('nkInfo').innerHTML=pos+(last?'<br>'+last:'');
+  }).catch(function(){});
+}
 function loadAll(){
   var errEl=document.getElementById('appErr');errEl.style.display='none';
   Promise.all([
@@ -232,6 +265,7 @@ function loadAll(){
     });
     if(!rows.length)tb.innerHTML='<tr><td colspan="5" class="skel">まだ判断ログがありません</td></tr>';
 
+    loadNikkei();
     document.getElementById('meta').innerHTML=meta?
       '学習日時: '+meta.trained_at.slice(0,16).replace('T',' ')+' UTC<br>'
       +'学習バー数: '+meta.train_bars.toLocaleString()+'　予測履歴: '+meta.predhist_bars.toLocaleString()
