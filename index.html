@@ -193,6 +193,13 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="btcInfo">—</div>
   </div>
 
+  <div class="card">
+    <div class="lbl">DIP//CATCHER（連続陰線3本→5日ロング・日経・仮想30万円）</div>
+    <div class="nav-big" id="dipNav" style="font-size:30px">—</div>
+    <div class="nav-sub" id="dipPl">—</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="dipInfo">—</div>
+  </div>
+
   <div class="card" style="padding:14px 16px">
     <div class="lbl">モデル</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--mut);line-height:1.8" id="meta">—</div>
@@ -285,6 +292,29 @@ function drawEq(rows){
     ctx.lineJoin='round';ctx.stroke();ctx.globalAlpha=1;
   });
 }
+function loadDip(){
+  Promise.all([
+    gh('live/dip_account.json').catch(function(){return null}),
+    gh('live/dip_log.csv').catch(function(){return null})
+  ]).then(function(res){
+    var a=res[0]?JSON.parse(res[0]):null;
+    var rows=res[1]?parseCSV(res[1]):[];
+    if(!a){document.getElementById('dipNav').textContent='¥300,000';
+      document.getElementById('dipPl').textContent='初回チェック待ち';
+      document.getElementById('dipPl').className='nav-sub';
+      document.getElementById('dipInfo').textContent='平日 15:20 JST に連続陰線を判定';return}
+    var last=rows.length?rows[rows.length-1]:null;
+    var nav=last?parseFloat(last.nav_jpy):a.balance_jpy;
+    document.getElementById('dipNav').textContent=yen(nav);
+    var pl=nav-300000, el=document.getElementById('dipPl');
+    el.textContent=(pl>=0?'+':'')+yen(pl).replace('¥-','−¥')+' （'+(pl/3000).toFixed(2)+'%）';
+    el.className='nav-sub '+(pl>=0?'up':'dn');
+    var pos=a.units>0?'<span class="up">LONG '+a.units.toFixed(2)+'u（'+a.days_left+'日残）</span>':'<span class="skel">待機（陰線を監視）</span>';
+    var info=last?('日経 '+Number(last.price).toLocaleString()+'　連続陰線 <span class="amber">'+last.down_streak+'本</span><br>'+pos+'　'+last.action):pos;
+    document.getElementById('dipInfo').innerHTML=info;
+  }).catch(function(){});
+}
+function loadDip_end(){}
 function loadBtc(){
   Promise.all([
     gh('live/btc_account.json').catch(function(){return null}),
@@ -392,6 +422,7 @@ function loadAll(){
 
     loadNikkei();
     loadBtc();
+    loadDip();
     document.getElementById('meta').innerHTML=meta?
       '学習日時: '+meta.trained_at.slice(0,16).replace('T',' ')+' UTC<br>'
       +'学習バー数: '+meta.train_bars.toLocaleString()+'　予測履歴: '+meta.predhist_bars.toLocaleString()
