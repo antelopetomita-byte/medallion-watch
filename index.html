@@ -200,12 +200,34 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="dipInfo">—</div>
   </div>
 
+  <div class="card">
+    <div class="lbl">ADX//GBPJPY（トレンド強度・ロング/フラット・仮想30万円）</div>
+    <div class="nav-big" id="adxNav" style="font-size:30px">—</div>
+    <div class="nav-sub" id="adxPl">—</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="adxInfo">—</div>
+  </div>
+
+  <div class="card">
+    <div class="lbl">ICHIMOKU//SPX（一目三役好転・S&amp;P500・仮想30万円）</div>
+    <div class="nav-big" id="ichiSpxNav" style="font-size:30px">—</div>
+    <div class="nav-sub" id="ichiSpxPl">—</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="ichiSpxInfo">—</div>
+  </div>
+
+  <div class="card">
+    <div class="lbl">ICHIMOKU//GOLD（一目三役好転・金・仮想30万円）</div>
+    <div class="nav-big" id="ichiGoldNav" style="font-size:30px">—</div>
+    <div class="nav-sub" id="ichiGoldPl">—</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="ichiGoldInfo">—</div>
+  </div>
+
   <div class="card" style="padding:14px 16px">
     <div class="lbl">モデル</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--mut);line-height:1.8" id="meta">—</div>
   </div>
 
-  <button onclick="loadAll()">更新する</button>
+  <button onclick="manualRefresh()">更新する</button>
+  <div style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--mut);margin-top:8px" id="lastUpdate">—</div>
   <div class="err" id="appErr"></div>
 </div>
 
@@ -238,7 +260,7 @@ function saveTok(){
   boot();
 }
 function gh(path){
-  return fetch('https://api.github.com/repos/'+REPO+'/contents/'+path,
+  return fetch('https://api.github.com/repos/'+REPO+'/contents/'+path+'?ref=main&t='+Date.now(),
     {headers:{'Authorization':'token '+tok(),'Accept':'application/vnd.github+json'}})
     .then(function(r){if(!r.ok)throw new Error(r.status);return r.json()})
     .then(function(j){return decodeURIComponent(escape(atob(j.content.replace(/\n/g,''))))});
@@ -291,6 +313,28 @@ function drawEq(rows){
     ctx.strokeStyle=col;ctx.globalAlpha=p[1];ctx.lineWidth=p[0];
     ctx.lineJoin='round';ctx.stroke();ctx.globalAlpha=1;
   });
+}
+function loadTrend(name,navId,plId,infoId){
+  Promise.all([
+    gh('live/'+name+'_account.json').catch(function(){return null}),
+    gh('live/'+name+'_log.csv').catch(function(){return null})
+  ]).then(function(res){
+    var a=res[0]?JSON.parse(res[0]):null;
+    var rows=res[1]?parseCSV(res[1]):[];
+    if(!a){document.getElementById(navId).textContent='¥300,000';
+      document.getElementById(plId).textContent='初回チェック待ち';
+      document.getElementById(plId).className='nav-sub';
+      document.getElementById(infoId).textContent='平日 15:30 JST にトレンド判定';return}
+    var last=rows.length?rows[rows.length-1]:null;
+    var nav=last?parseFloat(last.nav_jpy):a.balance_jpy;
+    document.getElementById(navId).textContent=yen(nav);
+    var pl=nav-300000, el=document.getElementById(plId);
+    el.textContent=(pl>=0?'+':'')+yen(pl).replace('¥-','−¥')+' （'+(pl/3000).toFixed(2)+'%）';
+    el.className='nav-sub '+(pl>=0?'up':'dn');
+    var pos=a.units>0?'<span class="up">LONG '+a.units.toFixed(3)+'u</span>':'<span class="skel">FLAT（トレンド待ち）</span>';
+    var info=last?(last.signal+'　'+pos+'　'+last.action):pos;
+    document.getElementById(infoId).innerHTML=info;
+  }).catch(function(){});
 }
 function loadDip(){
   Promise.all([
@@ -421,8 +465,13 @@ function loadAll(){
     if(!rows.length)tb.innerHTML='<tr><td colspan="5" class="skel">まだ判断ログがありません</td></tr>';
 
     loadNikkei();
+    var lu=document.getElementById('lastUpdate');
+    if(lu)lu.textContent='最終更新 '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     loadBtc();
     loadDip();
+    loadTrend('adx_gbpjpy','adxNav','adxPl','adxInfo');
+    loadTrend('ichimoku_spx','ichiSpxNav','ichiSpxPl','ichiSpxInfo');
+    loadTrend('ichimoku_gold','ichiGoldNav','ichiGoldPl','ichiGoldInfo');
     document.getElementById('meta').innerHTML=meta?
       '学習日時: '+meta.trained_at.slice(0,16).replace('T',' ')+' UTC<br>'
       +'学習バー数: '+meta.train_bars.toLocaleString()+'　予測履歴: '+meta.predhist_bars.toLocaleString()
@@ -432,6 +481,15 @@ function loadAll(){
     errEl.style.display='block';
     if(String(e.message)==='401'){localStorage.removeItem(KEY);boot()}
   });
+}
+function manualRefresh(){
+  var el=document.getElementById('lastUpdate');
+  if(el)el.textContent='更新中…';
+  loadAll();
+  setTimeout(function(){
+    var d=new Date();
+    if(el)el.textContent='最終更新 '+d.toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  },1500);
 }
 function boot(){
   var has=!!tok();
