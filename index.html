@@ -221,6 +221,13 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="ichiGoldInfo">—</div>
   </div>
 
+  <div class="card">
+    <div class="lbl">QUIET//BOTTOM（閑散底・個別株バスケット最大10銘柄・仮想30万円）</div>
+    <div class="nav-big" id="quietNav" style="font-size:30px">—</div>
+    <div class="nav-sub" id="quietPl">—</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--mut);margin-top:10px;line-height:1.8" id="quietInfo">—</div>
+  </div>
+
   <div class="card" style="padding:14px 16px">
     <div class="lbl">モデル</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--mut);line-height:1.8" id="meta">—</div>
@@ -313,6 +320,29 @@ function drawEq(rows){
     ctx.strokeStyle=col;ctx.globalAlpha=p[1];ctx.lineWidth=p[0];
     ctx.lineJoin='round';ctx.stroke();ctx.globalAlpha=1;
   });
+}
+function loadQuiet(){
+  Promise.all([
+    gh('live/quiet_account.json').catch(function(){return null}),
+    gh('live/quiet_log.csv').catch(function(){return null})
+  ]).then(function(res){
+    var a=res[0]?JSON.parse(res[0]):null;
+    var rows=res[1]?parseCSV(res[1]):[];
+    if(!a){document.getElementById('quietNav').textContent='¥300,000';
+      document.getElementById('quietPl').textContent='初回スキャン待ち';
+      document.getElementById('quietPl').className='nav-sub';
+      document.getElementById('quietInfo').textContent='平日 15:25 JST に105銘柄をスキャン';return}
+    var last=rows.length?rows[rows.length-1]:null;
+    var nav=last?parseFloat(last.nav_jpy):a.cash_jpy;
+    document.getElementById('quietNav').textContent=yen(nav);
+    var pl=nav-300000, el=document.getElementById('quietPl');
+    el.textContent=(pl>=0?'+':'')+yen(pl).replace('¥-','−¥')+' （'+(pl/3000).toFixed(2)+'%）';
+    el.className='nav-sub '+(pl>=0?'up':'dn');
+    var nh=a.positions?Object.keys(a.positions).length:0;
+    var holds=nh>0?'<span class="up">保有'+nh+'銘柄: '+Object.keys(a.positions).join(', ')+'</span>':'<span class="skel">保有なし（閑散底を探索中）</span>';
+    var info=last?(holds+'<br>'+(last.action||'')):holds;
+    document.getElementById('quietInfo').innerHTML=info;
+  }).catch(function(){});
 }
 function loadTrend(name,navId,plId,infoId){
   Promise.all([
@@ -472,6 +502,7 @@ function loadAll(){
     loadTrend('adx_gbpjpy','adxNav','adxPl','adxInfo');
     loadTrend('ichimoku_spx','ichiSpxNav','ichiSpxPl','ichiSpxInfo');
     loadTrend('ichimoku_gold','ichiGoldNav','ichiGoldPl','ichiGoldInfo');
+    loadQuiet();
     document.getElementById('meta').innerHTML=meta?
       '学習日時: '+meta.trained_at.slice(0,16).replace('T',' ')+' UTC<br>'
       +'学習バー数: '+meta.train_bars.toLocaleString()+'　予測履歴: '+meta.predhist_bars.toLocaleString()
