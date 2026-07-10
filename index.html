@@ -222,6 +222,11 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
   </div>
 
   <div class="card" style="padding:14px 16px">
+    <div class="lbl">DATA//COLLECTOR（日中データ蓄積・裏方ボット）</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--mut);line-height:2" id="collectorInfo">読み込み中…</div>
+  </div>
+
+  <div class="card" style="padding:14px 16px">
     <div class="lbl">モデル</div>
     <div style="font-family:var(--mono);font-size:11px;color:var(--mut);line-height:1.8" id="meta">—</div>
   </div>
@@ -313,6 +318,31 @@ function drawEq(rows){
     ctx.strokeStyle=col;ctx.globalAlpha=p[1];ctx.lineWidth=p[0];
     ctx.lineJoin='round';ctx.stroke();ctx.globalAlpha=1;
   });
+}
+function loadCollector(){
+  var FX='antelopetomita-byte/medallion-fx';
+  fetch('https://api.github.com/repos/'+FX+'/contents/data/intraday?t='+Date.now(),
+    {headers:{'Authorization':'token '+tok(),'Accept':'application/vnd.github+json'}})
+    .then(function(r){return r.ok?r.json():null})
+    .then(function(files){
+      var el=document.getElementById('collectorInfo');
+      if(!files||!files.length){el.textContent='まだデータがありません';return}
+      // estimate bars from file size (5m csv ~ 55 bytes/bar)
+      var usdjpy5m=files.filter(function(f){return f.name==='USDJPY_5m.csv'})[0];
+      var total=files.reduce(function(s,f){return s+f.size},0);
+      var bars5m=usdjpy5m?Math.round(usdjpy5m.size/55):0;
+      var days=Math.round(bars5m/288); // ~288 5-min bars per FX day
+      var target=120; // ~4 months for solid intraday validation
+      var pct=Math.min(100,Math.round(days/target*100));
+      var bar='';
+      for(var i=0;i<20;i++)bar+=(i<pct/5?'█':'░');
+      el.innerHTML='USDJPY 5分足: 約'+bars5m.toLocaleString()+'本（'+days+'日分）<br>'
+        +'収集ファイル: '+files.length+'個 / '+(total/1024/1024).toFixed(1)+'MB<br>'
+        +'検証可能まで: '+bar+' '+pct+'%<br>'
+        +'<span style="color:#5A6B7E">毎日 21:00 JST に自動蓄積中</span>';
+    }).catch(function(){
+      document.getElementById('collectorInfo').textContent='取得エラー';
+    });
 }
 function loadQuiet(){
   Promise.all([
@@ -496,6 +526,7 @@ function loadAll(){
     loadTrend('ichimoku_spx','ichiSpxNav','ichiSpxPl','ichiSpxInfo');
     loadTrend('ichimoku_gold','ichiGoldNav','ichiGoldPl','ichiGoldInfo');
     loadQuiet();
+    loadCollector();
     document.getElementById('meta').innerHTML=meta?
       '学習日時: '+meta.trained_at.slice(0,16).replace('T',' ')+' UTC<br>'
       +'学習バー数: '+meta.train_bars.toLocaleString()+'　予測履歴: '+meta.predhist_bars.toLocaleString()
