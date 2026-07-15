@@ -177,6 +177,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="nkNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="nkPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="nkInfo">—</div>
+    <canvas id="chartNikkei" width="600" height="90" style="margin-top:10px" data-chart="nikkei"></canvas>
   </div>
 
   <div class="card">
@@ -184,6 +185,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="btcNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="btcPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="btcInfo">—</div>
+    <canvas id="chartBtc" width="600" height="90" style="margin-top:10px" data-chart="btc"></canvas>
   </div>
 
   <div class="card">
@@ -191,6 +193,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="dipNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="dipPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="dipInfo">—</div>
+    <canvas id="chartDip" width="600" height="90" style="margin-top:10px" data-chart="nikkei"></canvas>
   </div>
 
   <div class="card">
@@ -198,6 +201,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="adxNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="adxPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="adxInfo">—</div>
+    <canvas id="chartAdx" width="600" height="90" style="margin-top:10px" data-chart="adx_gbpjpy"></canvas>
   </div>
 
   <div class="card">
@@ -205,6 +209,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="ichiSpxNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="ichiSpxPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="ichiSpxInfo">—</div>
+    <canvas id="chartIchiSpx" width="600" height="90" style="margin-top:10px" data-chart="ichimoku_spx"></canvas>
   </div>
 
   <div class="card">
@@ -212,6 +217,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="ichiGoldNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="ichiGoldPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="ichiGoldInfo">—</div>
+    <canvas id="chartIchiGold" width="600" height="90" style="margin-top:10px" data-chart="ichimoku_gold"></canvas>
   </div>
 
   <div class="card">
@@ -318,6 +324,50 @@ function drawEq(rows){
     ctx.strokeStyle=col;ctx.globalAlpha=p[1];ctx.lineWidth=p[0];
     ctx.lineJoin='round';ctx.stroke();ctx.globalAlpha=1;
   });
+}
+function drawMini(canvasId, chartName){
+  var cv=document.getElementById(canvasId);
+  if(!cv)return;
+  var FX='antelopetomita-byte/medallion-fx';
+  fetch('https://api.github.com/repos/'+FX+'/contents/data/charts/'+chartName+'.json?t='+Date.now(),
+    {headers:{'Authorization':'token '+tok(),'Accept':'application/vnd.github+json'}})
+    .then(function(r){return r.ok?r.json():null})
+    .then(function(j){
+      if(!j)return;
+      var data=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
+      var vals=data.series.map(function(p){return p.c});
+      if(vals.length<2)return;
+      var ctx=cv.getContext('2d'), W=cv.width, H=cv.height, pad=8;
+      ctx.clearRect(0,0,W,H);
+      var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
+      if(mx-mn<1e-9){mn-=1;mx+=1}
+      function Y(v){return H-pad-(v-mn)/(mx-mn)*(H-2*pad)}
+      var last=vals[vals.length-1], first=vals[0];
+      var col=last>=first?'#3DDCA3':'#FF5C7A';
+      // area fill
+      var grad=ctx.createLinearGradient(0,0,0,H);
+      grad.addColorStop(0,last>=first?'rgba(61,220,163,.22)':'rgba(255,92,122,.22)');
+      grad.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.beginPath();
+      vals.forEach(function(v,i){var x=i/(vals.length-1)*W; i?ctx.lineTo(x,Y(v)):ctx.moveTo(x,Y(v));});
+      ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+      // line
+      ctx.beginPath();
+      vals.forEach(function(v,i){var x=i/(vals.length-1)*W; i?ctx.lineTo(x,Y(v)):ctx.moveTo(x,Y(v));});
+      ctx.strokeStyle=col;ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
+      // last price dot + label
+      ctx.fillStyle=col;ctx.beginPath();ctx.arc(W,Y(last),3,0,7);ctx.fill();
+      ctx.fillStyle='#8595A8';ctx.font='9px IBM Plex Mono';ctx.textAlign='right';
+      ctx.fillText(last.toLocaleString()+' (60日)',W-6,12);
+    }).catch(function(){});
+}
+function loadCharts(){
+  drawMini('chartNikkei','nikkei');
+  drawMini('chartBtc','btc');
+  drawMini('chartDip','nikkei');
+  drawMini('chartAdx','adx_gbpjpy');
+  drawMini('chartIchiSpx','ichimoku_spx');
+  drawMini('chartIchiGold','ichimoku_gold');
 }
 function loadCollector(){
   var FX='antelopetomita-byte/medallion-fx';
@@ -527,6 +577,7 @@ function loadAll(){
     loadTrend('ichimoku_gold','ichiGoldNav','ichiGoldPl','ichiGoldInfo');
     loadQuiet();
     loadCollector();
+    loadCharts();
     document.getElementById('meta').innerHTML=meta?
       '学習日時: '+meta.trained_at.slice(0,16).replace('T',' ')+' UTC<br>'
       +'学習バー数: '+meta.train_bars.toLocaleString()+'　予測履歴: '+meta.predhist_bars.toLocaleString()
