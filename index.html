@@ -325,49 +325,85 @@ function drawEq(rows){
     ctx.lineJoin='round';ctx.stroke();ctx.globalAlpha=1;
   });
 }
-function drawMini(canvasId, chartName){
+function parseTrades(csv){
+  // returns [{date:'MM/DD', side:'buy'|'sell', price:number}]
+  var lines=csv.trim().split('\n'); var head=lines[0].split(',');
+  var out=[];
+  for(var i=1;i<lines.length;i++){
+    var c=lines[i].split(','); var row={};
+    head.forEach(function(h,k){row[h]=c[k]});
+    var act=(row.action||row.leg||'')+'';
+    var date=(row.time||'').slice(5,10); // MM-DD
+    var price=parseFloat(row.price||row.btc_usd);
+    if(isNaN(price))continue;
+    var side=null;
+    if(/BUY|enter|買い|LONG.*u|BUY\(/i.test(act)&&!/EXIT|SELL|hold|stay|flat/i.test(act))side='buy';
+    else if(/enter (LONG|SHORT)|flip/i.test(act))side='buy';
+    else if(/EXIT|SELL|exit/i.test(act))side='sell';
+    if(side)out.push({date:date.replace('-','/'),side:side,price:price});
+  }
+  return out;
+}
+function drawMini(canvasId, chartName, logPath){
   var cv=document.getElementById(canvasId);
   if(!cv)return;
   var FX='antelopetomita-byte/medallion-fx';
-  fetch('https://api.github.com/repos/'+FX+'/contents/data/charts/'+chartName+'.json?t='+Date.now(),
-    {headers:{'Authorization':'token '+tok(),'Accept':'application/vnd.github+json'}})
-    .then(function(r){return r.ok?r.json():null})
-    .then(function(j){
-      if(!j)return;
-      var data=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
-      var vals=data.series.map(function(p){return p.c});
-      if(vals.length<2)return;
-      var ctx=cv.getContext('2d'), W=cv.width, H=cv.height, pad=8;
-      ctx.clearRect(0,0,W,H);
-      var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
-      if(mx-mn<1e-9){mn-=1;mx+=1}
-      function Y(v){return H-pad-(v-mn)/(mx-mn)*(H-2*pad)}
-      var last=vals[vals.length-1], first=vals[0];
-      var col=last>=first?'#3DDCA3':'#FF5C7A';
-      // area fill
-      var grad=ctx.createLinearGradient(0,0,0,H);
-      grad.addColorStop(0,last>=first?'rgba(61,220,163,.22)':'rgba(255,92,122,.22)');
-      grad.addColorStop(1,'rgba(0,0,0,0)');
-      ctx.beginPath();
-      vals.forEach(function(v,i){var x=i/(vals.length-1)*W; i?ctx.lineTo(x,Y(v)):ctx.moveTo(x,Y(v));});
-      ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
-      // line
-      ctx.beginPath();
-      vals.forEach(function(v,i){var x=i/(vals.length-1)*W; i?ctx.lineTo(x,Y(v)):ctx.moveTo(x,Y(v));});
-      ctx.strokeStyle=col;ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
-      // last price dot + label
-      ctx.fillStyle=col;ctx.beginPath();ctx.arc(W,Y(last),3,0,7);ctx.fill();
-      ctx.fillStyle='#8595A8';ctx.font='9px IBM Plex Mono';ctx.textAlign='right';
-      ctx.fillText(last.toLocaleString()+' (60日)',W-6,12);
-    }).catch(function(){});
+  var chartP=fetch('https://api.github.com/repos/'+FX+'/contents/data/charts/'+chartName+'.json?t='+Date.now(),
+    {headers:{'Authorization':'token '+tok(),'Accept':'application/vnd.github+json'}}).then(function(r){return r.ok?r.json():null});
+  var logP=logPath?fetch('https://api.github.com/repos/'+FX+'/contents/'+logPath+'?t='+Date.now(),
+    {headers:{'Authorization':'token '+tok(),'Accept':'application/vnd.github+json'}}).then(function(r){return r.ok?r.json():null}):Promise.resolve(null);
+  Promise.all([chartP,logP]).then(function(res){
+    var j=res[0]; if(!j)return;
+    var data=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
+    var pts=data.series; var vals=pts.map(function(p){return p.c});
+    if(vals.length<2)return;
+    var ctx=cv.getContext('2d'), W=cv.width, H=cv.height, pad=8;
+    ctx.clearRect(0,0,W,H);
+    var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
+    if(mx-mn<1e-9){mn-=1;mx+=1}
+    function Y(v){return H-pad-(v-mn)/(mx-mn)*(H-2*pad)}
+    function X(i){return i/(vals.length-1)*W}
+    var last=vals[vals.length-1], first=vals[0];
+    var col=last>=first?'#3DDCA3':'#FF5C7A';
+    var grad=ctx.createLinearGradient(0,0,0,H);
+    grad.addColorStop(0,last>=first?'rgba(61,220,163,.22)':'rgba(255,92,122,.22)');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.beginPath();
+    vals.forEach(function(v,i){i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v));});
+    ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+    ctx.beginPath();
+    vals.forEach(function(v,i){i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v));});
+    ctx.strokeStyle=col;ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
+    // overlay trade markers
+    if(res[1]){
+      var csv=decodeURIComponent(escape(atob(res[1].content.replace(/\n/g,''))));
+      var trades=parseTrades(csv);
+      var dateIdx={}; pts.forEach(function(p,i){dateIdx[p.t]=i;});
+      trades.forEach(function(tr){
+        var i=dateIdx[tr.date];
+        if(i===undefined)return;
+        var x=X(i), y=Y(vals[i]);
+        ctx.fillStyle=tr.side==='buy'?'#3DDCA3':'#FF5C7A';
+        ctx.beginPath();
+        if(tr.side==='buy'){ctx.moveTo(x,y+9);ctx.lineTo(x-4,y+16);ctx.lineTo(x+4,y+16);}
+        else{ctx.moveTo(x,y-9);ctx.lineTo(x-4,y-16);ctx.lineTo(x+4,y-16);}
+        ctx.closePath();ctx.fill();
+      });
+    }
+    ctx.fillStyle=col;ctx.beginPath();ctx.arc(W,Y(last),3,0,7);ctx.fill();
+    ctx.fillStyle='#8595A8';ctx.font='9px IBM Plex Mono';ctx.textAlign='right';
+    ctx.fillText(last.toLocaleString()+' (60日)',W-6,12);
+    ctx.textAlign='left';
+    ctx.fillText('▲買 ▼売',6,H-4);
+  }).catch(function(){});
 }
 function loadCharts(){
-  drawMini('chartNikkei','nikkei');
-  drawMini('chartBtc','btc');
-  drawMini('chartDip','nikkei');
-  drawMini('chartAdx','adx_gbpjpy');
-  drawMini('chartIchiSpx','ichimoku_spx');
-  drawMini('chartIchiGold','ichimoku_gold');
+  drawMini('chartNikkei','nikkei','live/nikkei_log.csv');
+  drawMini('chartBtc','btc','live/btc_log.csv');
+  drawMini('chartDip','nikkei','live/dip_log.csv');
+  drawMini('chartAdx','adx_gbpjpy','live/adx_gbpjpy_log.csv');
+  drawMini('chartIchiSpx','ichimoku_spx','live/ichimoku_spx_log.csv');
+  drawMini('chartIchiGold','ichimoku_gold','live/ichimoku_gold_log.csv');
 }
 function loadCollector(){
   var FX='antelopetomita-byte/medallion-fx';
