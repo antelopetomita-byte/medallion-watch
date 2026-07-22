@@ -393,19 +393,22 @@ function drawMini(canvasId, chartName, logPath){
       trades.forEach(function(tr){
         var i=dateIdx[tr.date]; if(i===undefined)return;
         var x=X(i), y=Y(vals[i]);
-        ctx.strokeStyle='#0B0F14'; ctx.lineWidth=1.2;
+        ctx.strokeStyle='#EAF6EF'; ctx.lineWidth=1.5;
         if(tr.side==='buy'){
+          // blue up-triangle below the point + "買" label
           ctx.fillStyle='#5AA9FF';
-          ctx.beginPath();ctx.moveTo(x,y+7);ctx.lineTo(x-5,y+14);ctx.lineTo(x+5,y+14);ctx.closePath();ctx.fill();ctx.stroke();
+          ctx.beginPath();ctx.moveTo(x,y+8);ctx.lineTo(x-6,y+17);ctx.lineTo(x+6,y+17);ctx.closePath();ctx.fill();ctx.stroke();
+          ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillStyle='#5AA9FF';
+          ctx.fillText('買',x,y+27);
         } else {
           var win=(tr.pnl==null)?null:(tr.pnl>=0);
-          ctx.fillStyle=win===null?'#FFB454':(win?'#3DDCA3':'#FF5C7A');
-          ctx.beginPath();ctx.moveTo(x,y-7);ctx.lineTo(x-5,y-14);ctx.lineTo(x+5,y-14);ctx.closePath();ctx.fill();ctx.stroke();
-          if(tr.pnl!=null){
-            ctx.font='bold 9px IBM Plex Mono';ctx.textAlign='center';
-            ctx.fillStyle=win?'#3DDCA3':'#FF5C7A';
-            ctx.fillText((tr.pnl>=0?'+':'')+tr.pnl.toLocaleString(),x,y-17);
-          }
+          var mc=win===null?'#FFB454':(win?'#3DDCA3':'#FF5C7A');
+          // down-triangle above the point + pnl label
+          ctx.fillStyle=mc;
+          ctx.beginPath();ctx.moveTo(x,y-8);ctx.lineTo(x-6,y-17);ctx.lineTo(x+6,y-17);ctx.closePath();ctx.fill();ctx.stroke();
+          ctx.font='bold 9px IBM Plex Mono';ctx.textAlign='center';ctx.fillStyle=mc;
+          var lbl=(tr.pnl!=null)?((win?'利確':'損切')+(tr.pnl>=0?'+':'')+tr.pnl.toLocaleString()):'決済';
+          ctx.fillText(lbl,x,y-21);
         }
       });
     }
