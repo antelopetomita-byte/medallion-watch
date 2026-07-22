@@ -295,7 +295,7 @@ function parseCSV(t){
 }
 function drawEq(rows){
   var cv=document.getElementById('eq'),ctx=cv.getContext('2d');
-  var W=cv.width,H=cv.height,pad=8,padT=22,padB=20;
+  var W=cv.width,H=cv.height,pad=8;
   ctx.clearRect(0,0,W,H);
   var vals=rows.map(function(r){return parseFloat(r.nav_jpy)}).filter(function(v){return !isNaN(v)});
   if(vals.length<2){ctx.fillStyle='#5A6B7E';ctx.font='20px IBM Plex Mono';
@@ -357,7 +357,7 @@ function parseTrades(csv){
 function drawMini(canvasId, chartName, logPath){
   var cv=document.getElementById(canvasId);
   if(!cv)return;
-  var W=cv.width, H=cv.height, pad=8, padT=22, padB=20;
+  var W=cv.width, H=cv.height, pad=8;
   var ctx=cv.getContext('2d');
   var FX='antelopetomita-byte/medallion-fx';
   var chartP=fetch('https://api.github.com/repos/'+FX+'/contents/data/charts/'+chartName+'.json?t='+Date.now(),
@@ -373,16 +373,16 @@ function drawMini(canvasId, chartName, logPath){
     var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
     if(mx-mn<1e-9){mn-=1;mx+=1}
     var vr=mx-mn; mn-=vr*0.12; mx+=vr*0.12;
-    function Y(v){return padT+(1-(v-mn)/(mx-mn))*(H-padT-padB)}
+    function Y(v){return 22+(1-(v-mn)/(mx-mn))*(H-42)}
     function X(i){return i/(vals.length-1)*(W-54)}
     var last=vals[vals.length-1], first=vals[0];
     var up=last>=first, col=up?'#3DDCA3':'#FF5C7A';
-    var grad=ctx.createLinearGradient(0,padT,0,H-padB);
+    var grad=ctx.createLinearGradient(0,22,0,H-20);
     grad.addColorStop(0,up?'rgba(61,220,163,.22)':'rgba(255,92,122,.22)');
     grad.addColorStop(1,'rgba(0,0,0,0)');
     ctx.beginPath();
     vals.forEach(function(v,i){i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v));});
-    ctx.lineTo(X(vals.length-1),H-padB);ctx.lineTo(0,H-padB);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+    ctx.lineTo(X(vals.length-1),H-20);ctx.lineTo(0,H-20);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
     ctx.beginPath();
     vals.forEach(function(v,i){i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v));});
     ctx.strokeStyle=col;ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
@@ -401,7 +401,7 @@ function drawMini(canvasId, chartName, logPath){
     // date labels (bottom)
     ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle='#8595A8';
     [0,Math.floor(pts.length/2),pts.length-1].forEach(function(i){
-      ctx.fillText(pts[i].t,X(i),H-padB+4);
+      ctx.fillText(pts[i].t,X(i),H-16);
     });
     // trade markers: blue buy, green win-exit, red loss-exit, with pnl label
     if(res[1]){
