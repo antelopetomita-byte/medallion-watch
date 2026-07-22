@@ -386,14 +386,17 @@ function drawMini(canvasId, chartName, logPath){
     ctx.beginPath();
     vals.forEach(function(v,i){i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v));});
     ctx.strokeStyle=col;ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
-    // price gridlines + labels (right side)
+    // price gridlines + labels (right side, inset so they never clip)
     ctx.font='9px IBM Plex Mono';ctx.textBaseline='middle';ctx.textAlign='left';
-    [0,0.5,1].forEach(function(f){
-      var v=mn+(mx-mn)*f, yy=Y(v);
+    // use actual data min/max (not expanded) for label values
+    var dmin=Math.min.apply(null,vals), dmax=Math.max.apply(null,vals);
+    [dmax,(dmax+dmin)/2,dmin].forEach(function(v){
+      var yy=Y(v);
       ctx.strokeStyle='rgba(133,149,168,0.10)';ctx.lineWidth=1;
-      ctx.beginPath();ctx.moveTo(0,yy);ctx.lineTo(W-54,yy);ctx.stroke();
-      ctx.fillStyle='#8595A8';
-      ctx.fillText(Math.round(v).toLocaleString(),W-50,yy);
+      ctx.beginPath();ctx.moveTo(0,yy);ctx.lineTo(W-56,yy);ctx.stroke();
+      ctx.fillStyle='#9DAABC';
+      var dec=v<10?4:0;
+      ctx.fillText(v.toLocaleString(undefined,{maximumFractionDigits:dec}),W-52,yy);
     });
     // date labels (bottom)
     ctx.textAlign='center';ctx.textBaseline='top';ctx.fillStyle='#8595A8';
