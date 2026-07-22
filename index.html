@@ -177,7 +177,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="nkNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="nkPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="nkInfo">—</div>
-    <canvas id="chartNikkei" width="600" height="90" style="margin-top:10px" data-chart="nikkei"></canvas>
+    <canvas style="width:100%;display:block" id="chartNikkei" width="600" height="130" style="margin-top:10px" data-chart="nikkei"></canvas>
   </div>
 
   <div class="card">
@@ -185,7 +185,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="btcNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="btcPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="btcInfo">—</div>
-    <canvas id="chartBtc" width="600" height="90" style="margin-top:10px" data-chart="btc"></canvas>
+    <canvas style="width:100%;display:block" id="chartBtc" width="600" height="130" style="margin-top:10px" data-chart="btc"></canvas>
   </div>
 
   <div class="card">
@@ -193,7 +193,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="dipNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="dipPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="dipInfo">—</div>
-    <canvas id="chartDip" width="600" height="90" style="margin-top:10px" data-chart="nikkei"></canvas>
+    <canvas style="width:100%;display:block" id="chartDip" width="600" height="130" style="margin-top:10px" data-chart="nikkei"></canvas>
   </div>
 
   <div class="card">
@@ -201,7 +201,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="adxNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="adxPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="adxInfo">—</div>
-    <canvas id="chartAdx" width="600" height="90" style="margin-top:10px" data-chart="adx_gbpjpy"></canvas>
+    <canvas style="width:100%;display:block" id="chartAdx" width="600" height="130" style="margin-top:10px" data-chart="adx_gbpjpy"></canvas>
   </div>
 
   <div class="card">
@@ -209,7 +209,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="ichiSpxNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="ichiSpxPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="ichiSpxInfo">—</div>
-    <canvas id="chartIchiSpx" width="600" height="90" style="margin-top:10px" data-chart="ichimoku_spx"></canvas>
+    <canvas style="width:100%;display:block" id="chartIchiSpx" width="600" height="130" style="margin-top:10px" data-chart="ichimoku_spx"></canvas>
   </div>
 
   <div class="card">
@@ -217,7 +217,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="ichiGoldNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="ichiGoldPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="ichiGoldInfo">—</div>
-    <canvas id="chartIchiGold" width="600" height="90" style="margin-top:10px" data-chart="ichimoku_gold"></canvas>
+    <canvas style="width:100%;display:block" id="chartIchiGold" width="600" height="130" style="margin-top:10px" data-chart="ichimoku_gold"></canvas>
   </div>
 
   <div class="card">
@@ -232,7 +232,7 @@ input:focus{outline:none;border-color:var(--amber);box-shadow:0 0 10px rgba(255,
     <div class="nav-big" id="recruitNav" style="font-size:30px">—</div>
     <div class="nav-sub" id="recruitPl">—</div>
     <div style="font-family:var(--mono);font-size:11.5px;color:#A9B6C6;margin-top:10px;line-height:1.85" id="recruitInfo">—</div>
-    <canvas id="chartRecruit" width="600" height="90" style="margin-top:10px"></canvas>
+    <canvas style="width:100%;display:block" id="chartRecruit" width="600" height="130" style="margin-top:10px"></canvas>
   </div>
 
   <div class="card" style="padding:14px 16px">
@@ -355,6 +355,12 @@ function parseTrades(csv){
 function drawMini(canvasId, chartName, logPath){
   var cv=document.getElementById(canvasId);
   if(!cv)return;
+  // retina scaling for crispness
+  var DPR=window.devicePixelRatio||1;
+  var cssW=cv.clientWidth||cv.width, cssH=cv.height;
+  cv.width=cssW*DPR; cv.height=cssH*DPR;
+  var ctx=cv.getContext('2d'); ctx.scale(DPR,DPR);
+  var W=cssW, H=cssH;
   var FX='antelopetomita-byte/medallion-fx';
   var chartP=fetch('https://api.github.com/repos/'+FX+'/contents/data/charts/'+chartName+'.json?t='+Date.now(),
     {headers:{'Authorization':'token '+tok(),'Accept':'application/vnd.github+json'}}).then(function(r){return r.ok?r.json():null});
@@ -365,44 +371,66 @@ function drawMini(canvasId, chartName, logPath){
     var data=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
     var pts=data.series; var vals=pts.map(function(p){return p.c});
     if(vals.length<2)return;
-    var ctx=cv.getContext('2d'), W=cv.width, H=cv.height, pad=8;
+    var padL=4,padR=52,padT=16,padB=16;
     ctx.clearRect(0,0,W,H);
     var mn=Math.min.apply(null,vals), mx=Math.max.apply(null,vals);
     if(mx-mn<1e-9){mn-=1;mx+=1}
-    function Y(v){return H-pad-(v-mn)/(mx-mn)*(H-2*pad)}
-    function X(i){return i/(vals.length-1)*W}
+    var rng=mx-mn; mn-=rng*0.08; mx+=rng*0.08;
+    function Y(v){return padT+(1-(v-mn)/(mx-mn))*(H-padT-padB)}
+    function X(i){return padL+i/(vals.length-1)*(W-padL-padR)}
     var last=vals[vals.length-1], first=vals[0];
-    var col=last>=first?'#3DDCA3':'#FF5C7A';
-    var grad=ctx.createLinearGradient(0,0,0,H);
-    grad.addColorStop(0,last>=first?'rgba(61,220,163,.22)':'rgba(255,92,122,.22)');
+    var up=last>=first;
+    var col=up?'#3DDCA3':'#FF5C7A';
+    // horizontal gridlines + price labels (3 levels)
+    ctx.font='9px IBM Plex Mono'; ctx.textBaseline='middle';
+    [0,0.5,1].forEach(function(f){
+      var v=mn+(mx-mn)*f, y=Y(v);
+      ctx.strokeStyle='rgba(133,149,168,0.12)'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(W-padR,y); ctx.stroke();
+      ctx.fillStyle='#8595A8'; ctx.textAlign='left';
+      ctx.fillText(v.toLocaleString(undefined,{maximumFractionDigits:v<10?4:0}), W-padR+4, y);
+    });
+    // area
+    var grad=ctx.createLinearGradient(0,padT,0,H-padB);
+    grad.addColorStop(0,up?'rgba(61,220,163,.28)':'rgba(255,92,122,.28)');
     grad.addColorStop(1,'rgba(0,0,0,0)');
     ctx.beginPath();
     vals.forEach(function(v,i){i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v));});
-    ctx.lineTo(W,H);ctx.lineTo(0,H);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+    ctx.lineTo(X(vals.length-1),H-padB);ctx.lineTo(X(0),H-padB);ctx.closePath();
+    ctx.fillStyle=grad;ctx.fill();
+    // price line
     ctx.beginPath();
     vals.forEach(function(v,i){i?ctx.lineTo(X(i),Y(v)):ctx.moveTo(X(i),Y(v));});
     ctx.strokeStyle=col;ctx.lineWidth=2;ctx.lineJoin='round';ctx.stroke();
-    // overlay trade markers
+    // date axis (start / mid / end)
+    ctx.fillStyle='#8595A8';ctx.textAlign='center';ctx.textBaseline='top';
+    [0,Math.floor(pts.length/2),pts.length-1].forEach(function(i){
+      ctx.fillText(pts[i].t, X(i), H-padB+3);
+    });
+    // trade markers with price
     if(res[1]){
       var csv=decodeURIComponent(escape(atob(res[1].content.replace(/\n/g,''))));
       var trades=parseTrades(csv);
       var dateIdx={}; pts.forEach(function(p,i){dateIdx[p.t]=i;});
       trades.forEach(function(tr){
-        var i=dateIdx[tr.date];
-        if(i===undefined)return;
+        var i=dateIdx[tr.date]; if(i===undefined)return;
         var x=X(i), y=Y(vals[i]);
-        ctx.fillStyle=tr.side==='buy'?'#3DDCA3':'#FF5C7A';
+        var mc=tr.side==='buy'?'#3DDCA3':'#FF5C7A';
+        ctx.fillStyle=mc; ctx.strokeStyle='#0B0F14'; ctx.lineWidth=1.5;
         ctx.beginPath();
-        if(tr.side==='buy'){ctx.moveTo(x,y+9);ctx.lineTo(x-4,y+16);ctx.lineTo(x+4,y+16);}
-        else{ctx.moveTo(x,y-9);ctx.lineTo(x-4,y-16);ctx.lineTo(x+4,y-16);}
-        ctx.closePath();ctx.fill();
+        if(tr.side==='buy'){ctx.moveTo(x,y+7);ctx.lineTo(x-5,y+15);ctx.lineTo(x+5,y+15);}
+        else{ctx.moveTo(x,y-7);ctx.lineTo(x-5,y-15);ctx.lineTo(x+5,y-15);}
+        ctx.closePath();ctx.fill();ctx.stroke();
       });
     }
-    ctx.fillStyle=col;ctx.beginPath();ctx.arc(W,Y(last),3,0,7);ctx.fill();
-    ctx.fillStyle='#8595A8';ctx.font='9px IBM Plex Mono';ctx.textAlign='right';
-    ctx.fillText(last.toLocaleString()+' (60日)',W-6,12);
-    ctx.textAlign='left';
-    ctx.fillText('▲買 ▼売',6,H-4);
+    // last price marker (bright dot + boxed label)
+    var ly=Y(last);
+    ctx.fillStyle=col;ctx.beginPath();ctx.arc(X(vals.length-1),ly,3.5,0,7);ctx.fill();
+    // title: change %
+    var chg=((last-first)/first*100);
+    ctx.font='bold 10px IBM Plex Mono';ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillStyle=col;
+    ctx.fillText((chg>=0?'+':'')+chg.toFixed(1)+'% / 60日', padL, 2);
   }).catch(function(){});
 }
 function loadCharts(){
