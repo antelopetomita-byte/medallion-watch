@@ -334,21 +334,26 @@ function drawEq(rows){
   });
 }
 function parseTrades(csv){
-  // returns [{date:'MM/DD', side:'buy'|'sell', price:number}]
-  var lines=csv.trim().split('\n'); var head=lines[0].split(',');
+  // returns [{date:'MM/DD', side:'buy'|'sell', price, pnl}]
+  var lines=csv.trim().split(/\r?\n/);
+  // handle quoted commas: split on commas not inside quotes
+  function cells(line){var m=line.match(/("([^"]*)"|[^,]*)(,|$)/g)||[];return m.map(function(s){return s.replace(/,$/,'').replace(/^"|"$/g,'')})}
+  var head=cells(lines[0]);
   var out=[];
   for(var i=1;i<lines.length;i++){
-    var c=lines[i].split(','); var row={};
+    var c=cells(lines[i]); var row={};
     head.forEach(function(h,k){row[h]=c[k]});
     var act=(row.action||row.leg||'')+'';
-    var date=(row.time||'').slice(5,10); // MM-DD
-    var price=parseFloat(row.price||row.btc_usd);
+    var date=(row.time||'').slice(5,10).replace('-','/');
+    var price=parseFloat((row.price||row.btc_usd||'').replace(/,/g,''));
     if(isNaN(price))continue;
-    var side=null;
-    if(/BUY|enter|買い|LONG.*u|BUY\(/i.test(act)&&!/EXIT|SELL|hold|stay|flat/i.test(act))side='buy';
+    var side=null,pnl=null;
+    var pm=act.match(/pnl\s*([+-][\d,]+)/i)||act.match(/([+-][\d,]+)円/);
+    if(pm)pnl=parseFloat(pm[1].replace(/,/g,''));
+    if(/EXIT|SELL|exit|決済/i.test(act))side='sell';
+    else if(/BUY|買い|BUY\(/i.test(act)&&!/hold|stay|flat/i.test(act))side='buy';
     else if(/enter (LONG|SHORT)|flip/i.test(act))side='buy';
-    else if(/EXIT|SELL|exit/i.test(act))side='sell';
-    if(side)out.push({date:date.replace('-','/'),side:side,price:price});
+    if(side)out.push({date:date,side:side,price:price,pnl:pnl});
   }
   return out;
 }
@@ -415,12 +420,24 @@ function drawMini(canvasId, chartName, logPath){
       trades.forEach(function(tr){
         var i=dateIdx[tr.date]; if(i===undefined)return;
         var x=X(i), y=Y(vals[i]);
-        var mc=tr.side==='buy'?'#3DDCA3':'#FF5C7A';
-        ctx.fillStyle=mc; ctx.strokeStyle='#0B0F14'; ctx.lineWidth=1.5;
-        ctx.beginPath();
-        if(tr.side==='buy'){ctx.moveTo(x,y+7);ctx.lineTo(x-5,y+15);ctx.lineTo(x+5,y+15);}
-        else{ctx.moveTo(x,y-7);ctx.lineTo(x-5,y-15);ctx.lineTo(x+5,y-15);}
-        ctx.closePath();ctx.fill();ctx.stroke();
+        ctx.strokeStyle='#0B0F14'; ctx.lineWidth=1.5;
+        if(tr.side==='buy'){
+          ctx.fillStyle='#5AA9FF';  // buy = blue (neutral entry)
+          ctx.beginPath();ctx.moveTo(x,y+7);ctx.lineTo(x-5,y+15);ctx.lineTo(x+5,y+15);
+          ctx.closePath();ctx.fill();ctx.stroke();
+        } else {
+          // exit: green if win, red if loss
+          var win=(tr.pnl==null)?null:(tr.pnl>=0);
+          ctx.fillStyle=win===null?'#FFB454':(win?'#3DDCA3':'#FF5C7A');
+          ctx.beginPath();ctx.moveTo(x,y-7);ctx.lineTo(x-5,y-15);ctx.lineTo(x+5,y-15);
+          ctx.closePath();ctx.fill();ctx.stroke();
+          // pnl label above exit marker
+          if(tr.pnl!=null){
+            ctx.font='bold 9px IBM Plex Mono';ctx.textAlign='center';ctx.textBaseline='bottom';
+            ctx.fillStyle=win?'#3DDCA3':'#FF5C7A';
+            ctx.fillText((tr.pnl>=0?'+':'')+tr.pnl.toLocaleString()+'円', x, y-16);
+          }
+        }
       });
     }
     // last price marker (bright dot + boxed label)
@@ -431,6 +448,31 @@ function drawMini(canvasId, chartName, logPath){
     ctx.font='bold 10px IBM Plex Mono';ctx.textAlign='left';ctx.textBaseline='top';
     ctx.fillStyle=col;
     ctx.fillText((chg>=0?'+':'')+chg.toFixed(1)+'% / 60日', padL, 2);
+    // trade history summary under the chart
+    if(res[1]){
+      var csv2=decodeURIComponent(escape(atob(res[1].content.replace(/\n/g,''))));
+      var trs=parseTrades(csv2);
+      var exits=trs.filter(function(t){return t.side==='sell'&&t.pnl!=null});
+      var sumId=canvasId+'Sum';
+      var sumEl=document.getElementById(sumId);
+      if(!sumEl){
+        sumEl=document.createElement('div');
+        sumEl.id=sumId;
+        sumEl.style.cssText='font-family:var(--mono);font-size:10.5px;margin-top:6px;line-height:1.7';
+        cv.parentNode.insertBefore(sumEl,cv.nextSibling);
+      }
+      if(exits.length){
+        var wins=exits.filter(function(e){return e.pnl>=0}).length;
+        var tot=exits.reduce(function(s,e){return s+e.pnl},0);
+        var rows=exits.slice(-3).map(function(e){
+          var w=e.pnl>=0;
+          return '<span style="color:'+(w?'#3DDCA3':'#FF5C7A')+'">'+e.date+' '+(w?'利確':'損切')+' '+(e.pnl>=0?'+':'')+e.pnl.toLocaleString()+'円</span>';
+        }).join('　');
+        sumEl.innerHTML='<span style="color:#8595A8">決済 '+exits.length+'回（勝'+wins+'/負'+(exits.length-wins)+'）　累計</span> <span style="color:'+(tot>=0?'#3DDCA3':'#FF5C7A')+'">'+(tot>=0?'+':'')+tot.toLocaleString()+'円</span><br>'+rows;
+      } else {
+        sumEl.innerHTML='<span style="color:#8595A8">決済履歴なし（保有中または待機中）</span>';
+      }
+    }
   }).catch(function(){});
 }
 function loadCharts(){
