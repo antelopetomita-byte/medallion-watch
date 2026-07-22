@@ -295,7 +295,7 @@ function parseCSV(t){
 }
 function drawEq(rows){
   var cv=document.getElementById('eq'),ctx=cv.getContext('2d');
-  var W=cv.width,H=cv.height;
+  var W=cv.width,H=cv.height,pad=8,padT=22,padB=20;
   ctx.clearRect(0,0,W,H);
   var vals=rows.map(function(r){return parseFloat(r.nav_jpy)}).filter(function(v){return !isNaN(v)});
   if(vals.length<2){ctx.fillStyle='#5A6B7E';ctx.font='20px IBM Plex Mono';
@@ -312,7 +312,7 @@ function drawEq(rows){
   var last=vals[vals.length-1];
   var col=last>=300000?'#3DDCA3':'#FF5C7A';
   // gradient fill under curve
-  var grad=ctx.createLinearGradient(0,padT,0,H-padB);
+  var grad=ctx.createLinearGradient(0,pad,0,H-pad);
   grad.addColorStop(0,last>=300000?'rgba(61,220,163,.28)':'rgba(255,92,122,.28)');
   grad.addColorStop(1,'rgba(0,0,0,0)');
   ctx.beginPath();
